@@ -1,0 +1,106 @@
+# =========================
+# FRONTEND (React + Vite)
+# =========================
+
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/.cache/
+
+# Logs
+frontend/logs/
+frontend/*.log
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/pnpm-debug.log*
+
+# Environment files
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local
+
+# IDE files
+frontend/.vscode/
+frontend/.idea/
+
+# OS files
+frontend/.DS_Store
+frontend/Thumbs.db
+
+# =========================
+# BACKEND (Spring Boot)
+# =========================
+
+# Maven
+backend/target/
+
+# Gradle
+backend/build/
+backend/.gradle/
+
+# Application secrets
+backend/src/main/resources/application-local.properties
+backend/src/main/resources/application.properties
+backend/src/main/resources/application-prod.properties
+
+# Logs
+backend/logs/
+backend/*.log
+
+# Generated files
+backend/*.class
+
+# IDE files
+backend/.idea/
+backend/.vscode/
+backend/*.iml
+
+# OS files
+backend/.DS_Store
+backend/Thumbs.db
+
+# =========================
+# COMMON
+# =========================
+
+# Environment files
+.env
+.env.*
+
+# IntelliJ
+.idea/
+*.iml
+
+# VS Code
+.vscode/
+
+# Eclipse
+.project
+.classpath
+.settings/
+
+# NetBeans
+nbproject/private/
+
+# Mac
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+
+# Archives
+*.zip
+*.tar
+*.gz
+
+# Package lock files (optional)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
