@@ -2,83 +2,101 @@ package com.Project.Devpulse.Services;
 
 import com.Project.Devpulse.DTOs.Analytics.AIInsightResponse;
 import com.Project.Devpulse.Models.Monitoring.Monitor;
-import org.springframework.ai.chat.model.ChatModel;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.stereotype.Service;
-import tools.jackson.databind.ObjectMapper;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class ChatService {
 
     private final ChatModel chatModel;
+    private final ObjectMapper mapper = new ObjectMapper();
 
-    public AIInsightResponse generateMonitorInsight(Monitor monitor, double uptime, double avgLatency, int incidents, String history) {
+    public AIInsightResponse generateMonitorInsight(
+            Monitor monitor,
+            double uptime,
+            double avgLatency,
+            int incidents,
+            String history) {
 
         String prompt = """
-            You are a Senior Site Reliability Engineer.
+                You are a Senior Site Reliability Engineer.
 
-            Analyze the following monitor.
+                Analyze the following monitor:
 
-            Monitor Name:
-            %s
+                Monitor Name: %s
+                URL: %s
+                Uptime: %.2f%%
+                Average Latency: %.2f ms
+                Total Incidents: %d
 
-            URL:
-            %s
+                Last 100 Checks:
+                %s
 
-            Uptime:
-            %.2f%%
+                Return ONLY valid JSON.
 
-            Average Latency:
-            %.2f ms
+                {
+                  "summary": "string",
+                  "possibleCause": [
+                    "cause 1",
+                    "cause 2"
+                  ],
+                  "recommendation": [
+                    "recommendation 1",
+                    "recommendation 2"
+                  ]
+                }
 
-            Incident Count:
-            %d
-
-            Last 100 Checks:
-
-            %s
-
-            Based on the monitoring history:
-
-            1. Summarize service health.
-            2. Identify likely causes of failures.
-            3. Provide actionable recommendations.
-
-            Return ONLY valid JSON:
-
-            {
-              "summary":"",
-              "possibleCause":"",
-              "recommendation":""
-            }
-            """
+                Rules:
+                - summary must be a string.
+                - possibleCause must be an array of strings.
+                - recommendation must be an array of strings.
+                - No markdown.
+                - No code blocks.
+                - No extra text.
+                """
                 .formatted(
                         monitor.getName(),
                         monitor.getUrl(),
                         uptime,
                         avgLatency,
                         incidents,
-                        history
+                        history.isBlank()
+                                ? "No detailed history available."
+                                : history
                 );
 
-        String response = chatModel.call(prompt);
-        String cleanedResponse = response
-                .replace("```json", "")
-                .replace("```", "")
-                .trim();
-        System.out.println("Raw AI Response: " + response); // Debugging line to check the raw AI response
-        System.out.println("AI Response: " + cleanedResponse); // Debugging line to check the AI response
-
-        ObjectMapper mapper = new ObjectMapper();
-
         try {
+
+            String rawResponse = chatModel.call(prompt);
+
+            String cleanedResponse = rawResponse
+                    .replace("```json", "")
+                    .replace("```", "")
+                    .replaceAll("(?i)^\\s*json\\s*", "")
+                    .trim();
+
+            System.out.println("=== Raw AI Response ===");
+            System.out.println(rawResponse);
+
+            System.out.println("=== Cleaned Response ===");
+            System.out.println(cleanedResponse);
+
             return mapper.readValue(cleanedResponse, AIInsightResponse.class);
 
         } catch (Exception e) {
+
             e.printStackTrace();
-            throw new RuntimeException("Failed to parse AI response", e);
+
+            return new AIInsightResponse(
+                    "Unable to generate complete analysis at this moment.",
+                    List.of("There was an issue processing the AI response."),
+                    List.of("Please try again in a few moments.")
+            );
         }
     }
-
 }

@@ -49,16 +49,24 @@ public class AIInsightService {
 
         AIInsightResponse response = chatService.generateMonitorInsight(monitor, uptime, avgLatency, incidents,history);
         System.out.println("AI Insight Response: " + response); // Debugging line to check the AI response
+        String causes = response.getPossibleCause() == null
+                ? ""
+                : "• " + String.join("\n• ", response.getPossibleCause());
+
+        String recommendations = response.getRecommendation() == null
+                ? ""
+                : "• " + String.join("\n• ", response.getRecommendation());
+
         AIInsight insight = AIInsight.builder()
-                        .monitor(monitor)
-                        .summary(response.getSummary())
-                        .possibleCause(response.getPossibleCause())
-                        .recommendation(response.getRecommendation())
-                        .uptimePercentage(uptime)
-                        .averageLatency(avgLatency)
-                        .incidentsCount(incidents)
-                        .generatedAt(Instant.now())
-                        .build();
+                .monitor(monitor)
+                .summary(response.getSummary())
+                .possibleCause(causes)
+                .recommendation(recommendations)
+                .uptimePercentage(uptime)
+                .averageLatency(avgLatency)
+                .incidentsCount(incidents)
+                .generatedAt(Instant.now())
+                .build();
 
         return aiInsightRepository.save(insight);
     }

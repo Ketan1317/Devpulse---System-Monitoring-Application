@@ -1,14 +1,35 @@
 package com.Project.Devpulse.Models.Monitoring;
 
-import com.Project.Devpulse.Models.Monitoring.Types.MonitorType;
-import com.Project.Devpulse.Models.User;
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import lombok.*;
-import org.hibernate.validator.constraints.URL;
-
 import java.time.Instant;
 import java.util.UUID;
+
+import org.hibernate.validator.constraints.URL;
+
+import com.Project.Devpulse.Models.Monitoring.Types.MonitorType;
+import com.Project.Devpulse.Models.User;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "monitors")
@@ -17,7 +38,7 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-// This entity represents a monitoring configuration created by a user. It includes details such as the name of the monitor, the URL to be monitored, the type of monitoring (HTTP, Ping, etc.), the interval at which checks should be performed, and SSL certificate information if applicable. It also tracks when the monitor was created and last updated.
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"}) // Prevents Hibernate proxy issues
 public class Monitor {
 
     @Id
@@ -26,6 +47,7 @@ public class Monitor {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnore  // Hide full user object in most responses
     private User user;
 
     @Column(nullable = false, length = 100)
@@ -49,7 +71,6 @@ public class Monitor {
 
     // SSL info
     private Instant sslExpiryDate;
-
     private Long sslDaysRemaining;
 
     @Column(length = 255)
@@ -67,11 +88,11 @@ public class Monitor {
             orphanRemoval = true
     )
     @Builder.Default
+    @JsonIgnore  // ← Important: Prevent incidents from being serialized here
     private java.util.List<Incident> incidents = new java.util.ArrayList<>();
 
     @Column(name = "last_checked_at")
     private Instant lastCheckedAt;
-
 
     @PrePersist
     public void onCreate() {

@@ -2,6 +2,8 @@ package com.Project.Devpulse.DTOs.Analytics;
 
 import lombok.*;
 
+import java.util.List;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -12,8 +14,8 @@ public class AIInsightResponse {
 
     private String summary;
 
-    private String possibleCause;
+    private List<String> possibleCause;
 
-    private String recommendation;
+    private List<String> recommendation;
 }
 

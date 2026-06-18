@@ -1,6 +1,8 @@
 package com.Project.Devpulse.Models.Monitoring;
 
 import com.Project.Devpulse.Models.Monitoring.Types.IncidentStatus;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -14,6 +16,7 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Incident {
 
     @Id
@@ -22,6 +25,7 @@ public class Incident {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "monitor_id", nullable = false)
+    @JsonBackReference  // ← Best for bidirectional relationships
     private Monitor monitor;
 
     @Enumerated(EnumType.STRING)

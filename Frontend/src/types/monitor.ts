@@ -48,6 +48,6 @@ export interface IncidentResponse {
 
 export interface AIInsightResponse {
   summary: string;
-  possibleCause: string;
-  recommendation: string;
+  possibleCause: string[];
+  recommendation: string[];
 }
