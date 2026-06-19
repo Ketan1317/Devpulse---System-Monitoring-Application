@@ -233,7 +233,7 @@ spring.security.oauth2.client.registration.github.client-secret=${GITHUB_SECRET_
 
 # 🐳 Docker Setup
 
-## Backend
+## Backend.
 
 ### Build
 
