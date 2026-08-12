@@ -1,11 +1,8 @@
 package com.Project.Devpulse.Config;
 
-import com.Project.Devpulse.Services.OAuth2SuccessHandler;
-import com.Project.Devpulse.security.JwtAuthenticationFilter;
-import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -16,13 +13,19 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfigurationSource;
 
+import com.Project.Devpulse.Services.OAuth2SuccessHandler;
+import com.Project.Devpulse.security.JwtAuthenticationFilter;
+
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+
 @Configuration
 @RequiredArgsConstructor
 public class SecurityConfiguration {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
-    private final CorsConfigurationSource corsConfigurationSource;   // ← Injected
+    private final CorsConfigurationSource corsConfigurationSource;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -37,42 +40,60 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http
+    ) throws Exception {
 
         http
-                .csrf(csrf -> csrf.disable())
+            .csrf(csrf -> csrf.disable())
 
-                .cors(cors -> cors.configurationSource(corsConfigurationSource))
+            .cors(cors -> cors.configurationSource(corsConfigurationSource))
 
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            .sessionManagement(session ->
+                session.sessionCreationPolicy(
+                    SessionCreationPolicy.STATELESS
                 )
+            )
 
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/api/auth/**",
-                                "/swagger-ui/**",
-                                "/v3/api-docs/**",
-                                "/api/monitors",           // Add your monitor endpoints
-                                "/api/monitors/**"
-                        ).permitAll()
+            .authorizeHttpRequests(auth -> auth
 
-                        .anyRequest().authenticated()
+                // VERY IMPORTANT
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                .requestMatchers(
+                    "/api/auth/**",
+                    "/swagger-ui/**",
+                    "/v3/api-docs/**",
+                    "/api/monitors",
+                    "/api/monitors/**"
+                ).permitAll()
+
+                .anyRequest().authenticated()
+            )
+
+            .exceptionHandling(ex -> ex
+                .authenticationEntryPoint(
+                    (request, response, authException) ->
+                        response.setStatus(
+                            HttpServletResponse.SC_UNAUTHORIZED
+                        )
                 )
-
-                .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint((request, response, authException) ->
-                                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED))
-
-                        .accessDeniedHandler((request, response, accessDeniedException) ->
-                                response.setStatus(HttpServletResponse.SC_FORBIDDEN))
+                .accessDeniedHandler(
+                    (request, response, accessDeniedException) ->
+                        response.setStatus(
+                            HttpServletResponse.SC_FORBIDDEN
+                        )
                 )
+            )
 
-                .oauth2Login(oauth ->
-                        oauth.successHandler(oAuth2SuccessHandler)
-                )
+            .oauth2Login(oauth ->
+                oauth.successHandler(oAuth2SuccessHandler)
+            )
 
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(
+                jwtAuthenticationFilter,
+                UsernamePasswordAuthenticationFilter.class
+            );
 
         return http.build();
     }

@@ -28,49 +28,73 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final UserRepository userRepository;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+protected void doFilterInternal(
+        HttpServletRequest request,
+        HttpServletResponse response,
+        FilterChain filterChain
+) throws ServletException, IOException {
 
-        String path = request.getServletPath();
-
-        if (path.startsWith("/api/auth")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        String header = request.getHeader("Authorization");
-
-        if (header != null && header.startsWith("Bearer ")) {
-
-            String token = header.substring(7);
-
-            try {
-
-                if (jwtService.isAccessToken(token)) {
-
-                    Jws<Claims> parsedToken = jwtService.parse(token);
-
-                    String userId = parsedToken.getPayload().getSubject();
-
-                    UUID uuid = UUID.fromString(userId);
-
-                    userRepository.findById(uuid).ifPresent(user -> {
-
-                        if (user.isActive() && SecurityContextHolder.getContext().getAuthentication() == null) {
-
-                            UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(user, null, Collections.emptyList());
-
-                            auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-                            SecurityContextHolder.getContext().setAuthentication(auth);
-                        }
-                    });
-                }
-
-            } catch (JwtException ignored) {
-
-            }
-        }
-
+    // Always allow CORS preflight
+    if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
         filterChain.doFilter(request, response);
+        return;
     }
+
+    String path = request.getServletPath();
+
+    // Auth endpoints don't require JWT
+    if (path.startsWith("/api/auth")) {
+        filterChain.doFilter(request, response);
+        return;
+    }
+
+    String header = request.getHeader("Authorization");
+
+    if (header != null && header.startsWith("Bearer ")) {
+
+        String token = header.substring(7);
+
+        try {
+
+            if (jwtService.isAccessToken(token)) {
+
+                Jws<Claims> parsedToken = jwtService.parse(token);
+
+                String userId = parsedToken.getPayload().getSubject();
+
+                UUID uuid = UUID.fromString(userId);
+
+                userRepository.findById(uuid).ifPresent(user -> {
+
+                    if (user.isActive()
+                            && SecurityContextHolder
+                                .getContext()
+                                .getAuthentication() == null) {
+
+                        UsernamePasswordAuthenticationToken auth =
+                                new UsernamePasswordAuthenticationToken(
+                                        user,
+                                        null,
+                                        Collections.emptyList()
+                                );
+
+                        auth.setDetails(
+                                new WebAuthenticationDetailsSource()
+                                        .buildDetails(request)
+                        );
+
+                        SecurityContextHolder
+                                .getContext()
+                                .setAuthentication(auth);
+                    }
+                });
+            }
+
+        } catch (JwtException ignored) {
+        }
+    }
+
+    filterChain.doFilter(request, response);
+}
+
 }

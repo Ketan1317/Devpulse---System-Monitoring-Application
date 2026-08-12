@@ -1,4 +1,4 @@
-package com.Project.Devpulse.Config;   // Recommended: lowercase 'config'
+package com.Project.Devpulse.Config;
 
 import java.util.List;
 
@@ -13,31 +13,34 @@ public class CorsConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
+
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Allowed origins
-        configuration.setAllowedOrigins(List.of(
-                "http://localhost:5173"
-        ));
-
-        // Allowed methods
+        configuration.setAllowedOriginPatterns(List.of("*"));
         configuration.setAllowedMethods(List.of(
-                "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"
+                "GET",
+                "POST",
+                "PUT",
+                "DELETE",
+                "PATCH",
+                "OPTIONS",
+                "HEAD"
         ));
 
-        // Allowed headers
+        // Allow all request headers
         configuration.setAllowedHeaders(List.of("*"));
+        // Headers exposed to frontend
+        configuration.setExposedHeaders(List.of(
+                "Authorization",
+                "Content-Type"
+        ));
 
-        // Expose headers (important for JWT Authorization header)
-        configuration.setExposedHeaders(List.of("Authorization", "Content-Type"));
-
-        // Allow credentials (cookies, authorization headers)
         configuration.setAllowCredentials(true);
-
-        // Cache preflight response for 1 hour
         configuration.setMaxAge(3600L);
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
+
         source.registerCorsConfiguration("/**", configuration);
 
         return source;
